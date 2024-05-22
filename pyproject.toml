@@ -1,0 +1,36 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61.0"]
+
+[project.urls]
+Homepage = "https://github.com/shilem2/rgbd.git"
+
+[project]
+name = "rgbd"
+version = "0.0.1"
+authors = [
+  { name="Moshe Shilemay", email="moshe.shilemay@medtronic.com" },
+]
+description = "3D reconstruction from RGBD cameras"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+#    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "matplotlib~=3.8",
+    "numpy~=1.26",
+    "open3d~=0.17",
+    "opencv_python~=4.9.0",
+    "pandas~=2.2.2",
+    "pyrealsense2~=2.55.1",
+    "scikit_learn~=1.4",
+    "scipy~=1.13",
+    "pipreqs",
+]
+
+
+
