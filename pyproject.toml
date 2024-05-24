@@ -26,10 +26,11 @@ dependencies = [
     "open3d~=0.17",
     "opencv_python~=4.9.0",
     "pandas~=2.2.2",
-    "pyrealsense2~=2.55.1",
+    #"pyrealsense2~=2.55.1",
     "scikit_learn~=1.4",
     "scipy~=1.13",
     "pipreqs",
+    "pytest",
 ]
 
 

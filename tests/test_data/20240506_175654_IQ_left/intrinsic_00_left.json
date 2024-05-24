@@ -1,0 +1,23 @@
+{
+	"color_format" : "RGB8",
+	"depth_format" : "Z16",
+	"depth_scale" : 3999.999810010204,
+	"device_name" : "Intel RealSense L515",
+	"fps" : 30.0,
+	"height" : 720,
+	"intrinsic_matrix" : 
+	[
+		902.415,
+		0.0,
+		0.0,
+		0.0,
+		902.806,
+		0.0,
+		656.853,
+		346.649,
+		1.0
+	],
+	"serial_number" : "f0350845",
+	"stream_length_usec" : 29425631,
+	"width" : 1280,
+}
