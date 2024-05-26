@@ -4,31 +4,41 @@ import numpy as np
 from rgbd import RgbdReconstruction
 
 
-def test_make_fragments_two_cameras():
+def test_make_fragments_single_camera():
 
     dataset_1_path = (Path(__file__).parent / 'test_data' / '20240506_175654_IQ_left').as_posix()
-    dataset_2_path = (Path(__file__).parent / 'test_data' / '20240506_175527_IQ_right').as_posix()
-    output_root = (Path(__file__).parent / 'output' / 'rgbd_reconstruction').as_posix()
+    output_root = (Path(__file__).parent / 'output' / 'rgbd_reconstruction_single_camera').as_posix()
 
     n_max_images = 2  # default is None
 
     cfg_update = {'make_fragments': {'n_max_images': n_max_images},
                                      }
+    rec = RgbdReconstruction(dataset_1_path, output_root=output_root, cfg_update=cfg_update)
 
+    rec.reconstruction_single_camera()
+
+    assert np.asarray(rec.fragment_1_pcd.points).shape == (264969, 3)
+
+    pass
+
+
+
+def test_make_fragments_two_cameras():
+
+    dataset_1_path = (Path(__file__).parent / 'test_data' / '20240506_175654_IQ_left').as_posix()
+    dataset_2_path = (Path(__file__).parent / 'test_data' / '20240506_175527_IQ_right').as_posix()
+    output_root = (Path(__file__).parent / 'output' / 'rgbd_reconstruction_two_cameras').as_posix()
+
+    n_max_images = 2  # default is None
+
+    cfg_update = {'make_fragments': {'n_max_images': n_max_images},
+                                     }
     rec = RgbdReconstruction(dataset_1_path, dataset_2_path, output_root, cfg_update)
 
     rec.reconstruction_two_cameras()
 
     assert np.asarray(rec.fragment_1_pcd.points).shape == (264969, 3)
     assert np.asarray(rec.fragment_2_pcd.points).shape == (243206, 3)
-
-    pass
-
-
-def test_make_fragments_one_camera():
-
-
-
 
     pass
 
@@ -50,7 +60,7 @@ def test_make_fragments_one_camera():
 
 if __name__ == '__main__':
 
-    # test_make_fragments_one_camera()
-    test_make_fragments_two_cameras()
+    test_make_fragments_single_camera()
+    # test_make_fragments_two_cameras()
 
     pass
