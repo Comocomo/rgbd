@@ -6,10 +6,9 @@ from rgbd import RgbdReconstruction
 
 def test_make_fragments_two_cameras():
 
-    dataset_1_path = (Path(__file__).parents[1] / 'test_data' / '20240506_175654_IQ_left').as_posix()
-    dataset_2_path = (Path(__file__).parents[1] / 'test_data' / '20240506_175527_IQ_right').as_posix()
-    output_root = (Path(__file__).parents[1] / 'test_data' / 'output').as_posix()
-
+    dataset_1_path = (Path(__file__).parent / 'test_data' / '20240506_175654_IQ_left').as_posix()
+    dataset_2_path = (Path(__file__).parent / 'test_data' / '20240506_175527_IQ_right').as_posix()
+    output_root = (Path(__file__).parent / 'output' / 'rgbd_reconstruction').as_posix()
 
     n_max_images = 2  # default is None
 

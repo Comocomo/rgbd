@@ -22,8 +22,8 @@ classifiers = [
 
 dependencies = [
     "matplotlib~=3.8",
-    "numpy~=1.26",
-    "open3d~=0.17",
+    "numpy~=1.26.0",
+    "open3d~=0.17.0",
     "opencv_python~=4.9.0",
     "pandas~=2.2.2",
     #"pyrealsense2~=2.55.1",

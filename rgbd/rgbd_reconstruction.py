@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from rgbd import config, utils
-from rgbd.make_fragments import make_fragment_two_cameras
+from rgbd.make_fragments import make_fragment_single_camera
 
 
 
@@ -16,9 +16,6 @@ class RgbdReconstruction:
         cfg_update['path_dataset_1'] = Path(path_dataset_1)
         cfg_update['path_dataset_2'] = Path(path_dataset_2)
         cfg_update['output_root'] = output_root
-        cfg_update['output_fragments_1'] = output_root / 'fragments_1'  # camera 1 fragments
-        cfg_update['output_fragments_2'] = output_root / 'fragments_2'  # camera 2 fragments
-        cfg_update['output_scene'] = output_root / 'scene'
 
             # update config
         cfg_default = config.load_default_config()
@@ -26,10 +23,15 @@ class RgbdReconstruction:
 
         utils.make_clean_folder(output_root)
 
+        config.write_config(self.cfg, output_root / 'config.json')
+
         pass
 
     def reconstruction_two_cameras(self):
 
-        make_fragment_two_cameras(self.cfg)
+        print('making fragments ...')
+        make_fragment_single_camera(path_dataset=self.cfg['path_dataset_1'], output_dir=self.cfg['output_root'] / 'fragments_1', cfg=self.cfg['make_fragments'])
+        make_fragment_single_camera(path_dataset=self.cfg['path_dataset_2'], output_dir=self.cfg['output_root'] / 'fragments_2', cfg=self.cfg['make_fragments'])
+        print('done!')
 
         pass
