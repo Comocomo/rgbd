@@ -19,6 +19,9 @@ def test_make_fragments_two_cameras():
 
     rec.reconstruction_two_cameras()
 
+    assert np.asarray(rec.fragment_1_pcd.points).shape == (264969, 3)
+    assert np.asarray(rec.fragment_2_pcd.points).shape == (243206, 3)
+
     pass
 
 
