@@ -2,7 +2,7 @@ from pathlib import Path
 
 from rgbd import config, utils
 from rgbd.make_fragments import make_fragment_single_camera
-
+from rgbd.register_fragments import register_fragments_two_cameras
 
 
 class RgbdReconstruction:
@@ -25,21 +25,30 @@ class RgbdReconstruction:
 
         config.write_config(self.cfg, output_root / 'config.json')
 
+        self.data = {'fragment_1_pcd_path': None,
+                     'fragment_2_pcd_path': None,
+                     }
+
         pass
 
     def reconstruction_two_cameras(self):
 
-        print('making fragments ...')
-        self.fragment_1_pcd = make_fragment_single_camera(path_dataset=self.cfg['path_dataset_1'], output_dir=self.cfg['output_root'] / 'fragments_1', cfg=self.cfg['make_fragments'])
-        self.fragment_2_pcd = make_fragment_single_camera(path_dataset=self.cfg['path_dataset_2'], output_dir=self.cfg['output_root'] / 'fragments_2', cfg=self.cfg['make_fragments'])
-        print('done!')
+        self.make_fragments()
+        self.register_fragments()
+        # self.refine_registration()
+        # self.integrate_scene()
 
         pass
 
-    def reconstruction_single_camera(self):
+    def make_fragments(self):
 
         print('making fragments ...')
-        self.fragment_1_pcd = make_fragment_single_camera(path_dataset=self.cfg['path_dataset_1'], output_dir=self.cfg['output_root'] / 'fragments_1', cfg=self.cfg['make_fragments'])
+        self.data['fragment_1_pcd_path'] = make_fragment_single_camera(path_dataset=self.cfg['path_dataset_1'], output_dir=self.cfg['output_root'] / 'fragments_1', cfg=self.cfg['make_fragments'])
+        if self.cfg['path_dataset_2'] is not None:
+            self.data['fragment_2_pcd_path'] = make_fragment_single_camera(path_dataset=self.cfg['path_dataset_2'], output_dir=self.cfg['output_root'] / 'fragments_2', cfg=self.cfg['make_fragments'])
         print('done!')
 
-        pass
+
+    def register_fragments(self):
+
+        register_fragments_two_cameras()

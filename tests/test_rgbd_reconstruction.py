@@ -1,5 +1,6 @@
 from pathlib import Path
 import numpy as np
+import open3d as o3d
 
 from rgbd import RgbdReconstruction
 
@@ -15,9 +16,16 @@ def test_make_fragments_single_camera():
                                      }
     rec = RgbdReconstruction(dataset_1_path, output_root=output_root, cfg_update=cfg_update)
 
-    rec.reconstruction_single_camera()
+    rec.make_fragments()
 
-    assert np.asarray(rec.fragment_1_pcd.points).shape == (264969, 3)
+    fragment_1_pcd = o3d.io.read_point_cloud(rec.data['fragment_1_pcd_path'].as_posix())
+
+    display = False
+    if display:
+        o3d.visualization.draw_geometries([fragment_1_pcd], window_name='fragment_1_pcd', mesh_show_back_face=True)
+
+    assert np.asarray(fragment_1_pcd.points).shape == (264969, 3)
+    assert np.asarray(rec.data['fragment_2_pcd_path'] is None)
 
     pass
 
@@ -35,10 +43,19 @@ def test_make_fragments_two_cameras():
                                      }
     rec = RgbdReconstruction(dataset_1_path, dataset_2_path, output_root, cfg_update)
 
-    rec.reconstruction_two_cameras()
+    rec.make_fragments()
 
-    assert np.asarray(rec.fragment_1_pcd.points).shape == (264969, 3)
-    assert np.asarray(rec.fragment_2_pcd.points).shape == (243206, 3)
+    fragment_1_pcd = o3d.io.read_point_cloud(rec.data['fragment_1_pcd_path'].as_posix())
+    fragment_2_pcd = o3d.io.read_point_cloud(rec.data['fragment_2_pcd_path'].as_posix())
+
+    display = False
+    if display:
+        o3d.visualization.draw_geometries([fragment_1_pcd], window_name='fragment_1_pcd', mesh_show_back_face=True)
+        o3d.visualization.draw_geometries([fragment_2_pcd], window_name='fragment_2_pcd', mesh_show_back_face=True)
+
+
+    assert np.asarray(fragment_1_pcd.points).shape == (264969, 3)
+    assert np.asarray(fragment_2_pcd.points).shape == (243206, 3)
 
     pass
 

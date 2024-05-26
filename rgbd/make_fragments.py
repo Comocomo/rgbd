@@ -114,10 +114,10 @@ def make_pointcloud_for_fragment(posegraph_dir, color_files, depth_files, fragme
     pcd.points = mesh.vertices
     pcd.colors = mesh.vertex_colors
 
-    pcd_name = posegraph_dir / f'fragment_{fragment_id}.ply'
-    o3d.io.write_point_cloud(pcd_name.as_posix(), pcd, write_ascii=False, compressed=True)
+    pcd_path = posegraph_dir / f'fragment_{fragment_id}.ply'
+    o3d.io.write_point_cloud(pcd_path.as_posix(), pcd, write_ascii=False, compressed=True)
 
-    return pcd
+    return pcd_path
 
 
 def make_fragment_single_camera(path_dataset, output_dir, cfg):
@@ -147,7 +147,7 @@ def make_fragment_single_camera(path_dataset, output_dir, cfg):
                                 output_dir=output_dir,
                                 )
     optimize_posegraph_for_fragment(output_dir, fragment_id, cfg)
-    pcd = make_pointcloud_for_fragment(output_dir, color_files, depth_files, fragment_id, n_fragments, intrinsics, cfg)
+    pcd_path = make_pointcloud_for_fragment(output_dir, color_files, depth_files, fragment_id, n_fragments, intrinsics, cfg)
 
-    return pcd
+    return pcd_path
 
