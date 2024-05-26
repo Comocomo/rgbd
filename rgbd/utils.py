@@ -91,6 +91,7 @@ def mesh_largest_connected_component(mesh, display=False, save_file_name=None):
     largest_cluster_idx = cluster_n_triangles.argmax()
     triangles_to_remove = triangle_clusters != largest_cluster_idx
     mesh.remove_triangles_by_mask(triangles_to_remove)
+    mesh.remove_unreferenced_vertices()
 
     if display:
         o3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
