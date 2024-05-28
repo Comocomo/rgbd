@@ -2,7 +2,7 @@ from pathlib import Path
 import open3d as o3d
 import numpy as np
 
-from rgbd.utils import get_rgbd_file_lists, read_rgbd_image, filter_rgbd_by_depth, filter_pcd, mesh_largest_connected_component
+from rgbd import utils
 from rgbd.opencv_pose_estimation import pose_estimation
 from rgbd.optimize_posegraph import optimize_posegraph_for_fragment
 
@@ -10,8 +10,8 @@ from rgbd.optimize_posegraph import optimize_posegraph_for_fragment
 def register_one_rgbd_pair(s, t, color_files, depth_files, intrinsic, with_opencv, convert_rgb_to_intensity=True,
                            depth_diff_max=0.03, depth_scale=3999.999810010204, depth_max=2.5):
 
-    source_rgbd_image = read_rgbd_image(color_files[s], depth_files[s], convert_rgb_to_intensity, depth_scale, depth_max)
-    target_rgbd_image = read_rgbd_image(color_files[t], depth_files[t], convert_rgb_to_intensity, depth_scale, depth_max)
+    source_rgbd_image = utils.read_rgbd_image(color_files[s], depth_files[s], convert_rgb_to_intensity, depth_scale, depth_max)
+    target_rgbd_image = utils.read_rgbd_image(color_files[t], depth_files[t], convert_rgb_to_intensity, depth_scale, depth_max)
 
     option = o3d.pipelines.odometry.OdometryOption()
     option.depth_diff_max = depth_diff_max
@@ -90,8 +90,8 @@ def integrate_rgb_frames_for_fragment(color_files, depth_files, fragment_id, n_f
         i_abs = fragment_id * cfg['n_frames_per_fragment'] + i
         print("Fragment %03d / %03d :: integrate rgbd frame %d (%d of %d)." % (fragment_id, n_fragments - 1, i_abs, i + 1, len(pose_graph.nodes)))
 
-        rgbd = read_rgbd_image(color_files[i_abs], depth_files[i_abs], False, cfg['depth_scale'], cfg['depth_max'])
-        rgbd = filter_rgbd_by_depth(rgbd, depth_min_max=cfg['z_min_max'])
+        rgbd = utils.read_rgbd_image(color_files[i_abs], depth_files[i_abs], False, cfg['depth_scale'], cfg['depth_max'])
+        rgbd = utils.filter_rgbd_by_depth(rgbd, depth_min_max=cfg['z_min_max'])
         pose = pose_graph.nodes[i].pose
 
         volume.integrate(rgbd, intrinsic, np.linalg.inv(pose))
@@ -99,8 +99,8 @@ def integrate_rgb_frames_for_fragment(color_files, depth_files, fragment_id, n_f
         pass
 
     mesh = volume.extract_triangle_mesh()
-    mesh = filter_pcd(mesh, cfg['x_min_max'], cfg['y_min_max'], cfg['z_min_max'], outlier_removal_flag=False, display=False)
-    mesh = mesh_largest_connected_component(mesh, display=False, save_file_name=None)
+    mesh = utils.filter_pcd(mesh, cfg['x_min_max'], cfg['y_min_max'], cfg['z_min_max'], outlier_removal_flag=False, display=False)
+    mesh = utils.mesh_largest_connected_component(mesh, display=False, save_file_name=None)
     mesh.compute_vertex_normals()
 
     return mesh
@@ -122,10 +122,12 @@ def make_pointcloud_for_fragment(posegraph_dir, color_files, depth_files, fragme
 
 def make_fragment_single_camera(path_dataset, output_dir, cfg):
 
+    utils.make_clean_folder(output_dir)
+
     path_intrinsics = path_dataset / 'intrinsics.json'
     intrinsics = o3d.io.read_pinhole_camera_intrinsic(path_intrinsics.as_posix())
 
-    [color_files, depth_files] = get_rgbd_file_lists(path_dataset)
+    [color_files, depth_files] = utils.get_rgbd_file_lists(path_dataset)
 
     n_max_images = cfg['n_max_images']
 

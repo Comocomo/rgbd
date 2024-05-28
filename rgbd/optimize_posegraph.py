@@ -6,6 +6,7 @@ from os.path import join
 def run_posegraph_optimization(pose_graph_name, pose_graph_optimized_name,
                                max_correspondence_distance,
                                preference_loop_closure):
+
     # to display messages from o3d.pipelines.registration.global_optimization
     o3d.utility.set_verbosity_level(o3d.utility.VerbosityLevel.Debug)
 
@@ -38,12 +39,14 @@ def optimize_posegraph_for_fragment(posegraph_dir, fragment_id, cfg):
 
     pass
 
-def optimize_posegraph_for_scene(path_dataset, config):
-    pose_graph_name = join(path_dataset, config["template_global_posegraph"])
-    pose_graph_optimized_name = join(path_dataset, config["template_global_posegraph_optimized"])
-    run_posegraph_optimization(pose_graph_name, pose_graph_optimized_name,
-                               max_correspondence_distance=config["voxel_size"] * 1.4,
-                               preference_loop_closure=config["preference_loop_closure_registration"])
+def optimize_posegraph_for_scene(posegraph_dir, cfg):
+
+    pose_graph_name = posegraph_dir / 'global_registration.json'
+    pose_graph_optimized_name = posegraph_dir / 'global_registration_optimized.json'
+
+    run_posegraph_optimization(pose_graph_name.as_posix(), pose_graph_optimized_name.as_posix(),
+                               max_correspondence_distance=cfg["voxel_size"] * 1.4,
+                               preference_loop_closure=cfg["preference_loop_closure_registration"])
     pass
 
 def optimize_posegraph_for_refined_scene(path_dataset, config):

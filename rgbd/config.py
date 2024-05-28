@@ -1,7 +1,11 @@
 import json
 from pathlib import Path
 from copy import deepcopy
+import numpy as np
+import datetime
+
 from rgbd.configs import config_default
+
 
 def load_default_config(key=None):
 
@@ -49,7 +53,7 @@ def write_config(cfg, file_path):
 
     cfg_save = convert_path_to_str_recusively(cfg)
 
-    cfg_json = json.dumps(cfg_save, indent=4, sort_keys=True)
+    cfg_json = json.dumps(cfg_save, default=convert_array_to_json, indent=4, sort_keys=True)
 
     file_path = Path(file_path)
     file_path.parent.mkdir(exist_ok=True, parents=True)
@@ -63,9 +67,25 @@ def read_config(file_path):
 
     path = Path(file_path)
     text = path.read_text()
-    cfg = json.loads(text)
+    cfg = json.loads(text, object_hook=convert_json_to_array)
 
     return cfg
 
 
     pass
+
+def convert_array_to_json(x):
+    if hasattr(x, "tolist"):  # numpy arrays have this
+        return {"$array": x.tolist()}  # Make a tagged object
+    if isinstance(x, datetime.date):
+        return {"$date": x.isoformat()}
+    raise TypeError(x)
+
+def convert_json_to_array(x):
+    if len(x) == 1:  # Might be a tagged object...
+        key, value = next(iter(x.items()))  # Grab the tag and value
+        if key == "$array":  # If the tag is correct,
+            return np.array(value)  # cast back to array
+        if key == "$date":
+            return datetime.datetime.strptime(value, '%Y-%m-%d').date()
+    return x

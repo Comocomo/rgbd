@@ -1,4 +1,4 @@
-
+import numpy as np
 
 general = {'path_dataset_1': None,
            'path_dataset_2': None,
@@ -20,7 +20,18 @@ make_fragments = {'n_max_images': None,
                   'outlier_removal_flag': True
                   }
 
+register_fragments = {'T_init_1to2': np.identity(4),
+                      'voxel_size': 0.01,  # [m], used for downsampling pcd for initial registration
+                      'icp_method': 'color',  # one of ['point_to_point', 'point_to_plane', 'color', 'generalized']
+                      'preference_loop_closure_registration': 5.0,
+                      'python_multi_threading': False,
+                      'debug_mode': False,
+
+                      }
+
+
 cfg = {'make_fragments': make_fragments,
+       'register_fragments': register_fragments,
        }
 
 cfg.update(general)
