@@ -16,17 +16,22 @@ def register_one_rgbd_pair(s, t, color_files, depth_files, intrinsic, with_openc
     option = o3d.pipelines.odometry.OdometryOption()
     option.depth_diff_max = depth_diff_max
     if abs(s - t) != 1:
+
         if with_opencv:
+
             success_5pt, odo_init = pose_estimation(source_rgbd_image, target_rgbd_image, intrinsic, False)
+
             if success_5pt:
                 [success, trans, info] = o3d.pipelines.odometry.compute_rgbd_odometry(source_rgbd_image, target_rgbd_image, intrinsic, odo_init, o3d.pipelines.odometry.RGBDOdometryJacobianFromHybridTerm(), option)
                 return [success, trans, info]
+
         return [False, np.identity(4), np.identity(6)]
+
     else:
+
         odo_init = np.identity(4)
-        [success, trans, info] = o3d.pipelines.odometry.compute_rgbd_odometry(
-            source_rgbd_image, target_rgbd_image, intrinsic, odo_init,
-            o3d.pipelines.odometry.RGBDOdometryJacobianFromHybridTerm(), option)
+        [success, trans, info] = o3d.pipelines.odometry.compute_rgbd_odometry(source_rgbd_image, target_rgbd_image, intrinsic, odo_init, o3d.pipelines.odometry.RGBDOdometryJacobianFromHybridTerm(), option)
+
         return [success, trans, info]
 
 
@@ -58,11 +63,7 @@ def make_posegraph_for_fragment(color_files, depth_files,
                 trans_odometry = np.dot(trans, trans_odometry)
                 trans_odometry_inv = np.linalg.inv(trans_odometry)
                 pose_graph.nodes.append(o3d.pipelines.registration.PoseGraphNode(trans_odometry_inv))
-                pose_graph.edges.append(o3d.pipelines.registration.PoseGraphEdge(s - sid,
-                                                                                 t - sid,
-                                                                                 trans,
-                                                                                 info,
-                                                                                 uncertain=False))
+                pose_graph.edges.append(o3d.pipelines.registration.PoseGraphEdge(s - sid, t - sid, trans, info, uncertain=False))
 
             # keyframe loop closure
             if (s % cfg['n_keyframes_per_n_frame'] == 0 and t % cfg['n_keyframes_per_n_frame'] == 0):
@@ -70,7 +71,9 @@ def make_posegraph_for_fragment(color_files, depth_files,
                 if success:
                     pose_graph.edges.append(o3d.pipelines.registration.PoseGraphEdge(s - sid, t - sid, trans, info, uncertain=True))
 
-    pose_graph_file = output_dir / f'fragment_{fragment_id}.json'
+            pass
+
+    pose_graph_file = output_dir / f'fragment_{fragment_id:03}.json'
     Path(pose_graph_file).parent.mkdir(exist_ok=True, parents=True)
     o3d.io.write_pose_graph(pose_graph_file.as_posix(), pose_graph)
 
@@ -107,14 +110,14 @@ def integrate_rgb_frames_for_fragment(color_files, depth_files, fragment_id, n_f
 
 def make_pointcloud_for_fragment(posegraph_dir, color_files, depth_files, fragment_id, n_fragments, intrinsic, cfg):
 
-    pose_graph_optimized_name = posegraph_dir / f'fragment_optimized_{fragment_id}.json'
+    pose_graph_optimized_name = posegraph_dir / f'fragment_optimized_{fragment_id:03}.json'
     mesh = integrate_rgb_frames_for_fragment(color_files, depth_files, fragment_id, n_fragments, pose_graph_optimized_name.as_posix(), intrinsic, cfg)
 
     pcd = o3d.geometry.PointCloud()
     pcd.points = mesh.vertices
     pcd.colors = mesh.vertex_colors
 
-    pcd_path = posegraph_dir / f'fragment_{fragment_id}.ply'
+    pcd_path = posegraph_dir / f'fragment_{fragment_id:03}.ply'
     o3d.io.write_point_cloud(pcd_path.as_posix(), pcd, write_ascii=False, compressed=True)
 
     return pcd_path

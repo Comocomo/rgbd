@@ -3,6 +3,7 @@ from pathlib import Path
 from rgbd import config, utils
 from rgbd.make_fragments import make_fragment_single_camera
 from rgbd.register_fragments import register_fragments_two_cameras
+from rgbd.refine_registration import refine_registration_two_cameras
 
 
 class RgbdReconstruction:
@@ -50,10 +51,20 @@ class RgbdReconstruction:
 
     def register_fragments(self):
 
-        fragment_1_pcd_path = self.cfg['output_root'] / 'fragments_1' / 'fragment_0.ply'
-        fragment_2_pcd_path = self.cfg['output_root'] / 'fragments_2' / 'fragment_0.ply'
+        fragment_1_pcd_path = self.cfg['output_root'] / 'fragments_1' / 'fragment_000.ply'
+        fragment_2_pcd_path = self.cfg['output_root'] / 'fragments_2' / 'fragment_000.ply'
         ply_file_names = [fragment_1_pcd_path.as_posix(), fragment_2_pcd_path.as_posix()]
 
         register_fragments_two_cameras(ply_file_names, self.cfg['output_root'] / 'scene', self.cfg['register_fragments'])
+
+        pass
+
+    def refine_registration(self):
+
+        fragment_1_pcd_path = self.cfg['output_root'] / 'fragments_1' / 'fragment_000.ply'
+        fragment_2_pcd_path = self.cfg['output_root'] / 'fragments_2' / 'fragment_000.ply'
+        ply_file_names = [fragment_1_pcd_path.as_posix(), fragment_2_pcd_path.as_posix()]
+
+        refine_registration_two_cameras(ply_file_names, self.cfg['output_root'] / 'scene', self.cfg['refine_registration'])
 
         pass

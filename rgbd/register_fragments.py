@@ -8,23 +8,24 @@ from rgbd.optimize_posegraph import optimize_posegraph_for_scene
 from rgbd.utils import make_clean_folder
 
 
-def preprocess_point_cloud(pcd, config):
-    voxel_size = config["voxel_size"]
+def preprocess_point_cloud(pcd, cfg):
+    voxel_size = cfg["voxel_size"]
     pcd_down = pcd.voxel_down_sample(voxel_size)
     pcd_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2.0, max_nn=30))
     pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(pcd_down, o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 5.0, max_nn=100))
     return (pcd_down, pcd_fpfh)
 
 
-def register_point_cloud_fpfh(source, target, source_fpfh, target_fpfh, config):
-    o3d.utility.set_verbosity_level(o3d.utility.VerbosityLevel.Debug)
-    distance_threshold = config["voxel_size"] * 1.4
+def register_point_cloud_fpfh(source, target, source_fpfh, target_fpfh, cfg):
 
-    if config["global_registration"] == "fgr":
+    o3d.utility.set_verbosity_level(o3d.utility.VerbosityLevel.Debug)
+    distance_threshold = cfg["voxel_size"] * 1.4
+
+    if cfg["global_registration"] == "fgr":
         result = o3d.pipelines.registration.registration_fgr_based_on_feature_matching( source, target, source_fpfh, target_fpfh,
                                                                                         o3d.pipelines.registration.FastGlobalRegistrationOption(maximum_correspondence_distance=distance_threshold))
 
-    if config["global_registration"] == "ransac":
+    if cfg["global_registration"] == "ransac":
         # Fallback to preset parameters that works better
         result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
             source, target, source_fpfh, target_fpfh, False, distance_threshold,
@@ -107,23 +108,18 @@ def register_point_cloud_pair(ply_file_names, s, t, cfg, trans_init=None):
 
     return (True, transformation, information)
 
-def multiscale_icp(source,
-                   target,
-                   voxel_size,
-                   max_iter,
-                   config,
-                   init_transformation=np.identity(4)):
+def multiscale_icp(source, target, voxel_size, max_iter, cfg, init_transformation=np.identity(4)):
 
     current_transformation = init_transformation
 
     for i, scale in enumerate(range(len(max_iter))):  # multi-scale approach
         iter = max_iter[scale]
-        distance_threshold = config["voxel_size"] * 1.4
+        distance_threshold = cfg["voxel_size"] * 1.4
         print("voxel_size {}".format(voxel_size[scale]))
         source_down = source.voxel_down_sample(voxel_size[scale])
         target_down = target.voxel_down_sample(voxel_size[scale])
 
-        if config["icp_method"] == "point_to_point":
+        if cfg["icp_method"] == "point_to_point":
             result_icp = o3d.pipelines.registration.registration_icp(
                 source_down, target_down, distance_threshold,
                 current_transformation,
@@ -134,7 +130,7 @@ def multiscale_icp(source,
             source_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size[scale] * 2.0, max_nn=30))
             target_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size[scale] * 2.0, max_nn=30))
 
-            if config["icp_method"] == "point_to_plane":
+            if cfg["icp_method"] == "point_to_plane":
                 result_icp = o3d.pipelines.registration.registration_icp(
                     source_down, target_down, distance_threshold,
                     current_transformation,
@@ -142,7 +138,7 @@ def multiscale_icp(source,
                     TransformationEstimationPointToPlane(),
                     o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=iter))
 
-            if config["icp_method"] == "color":
+            if cfg["icp_method"] == "color":
                 # Colored ICP is sensitive to threshold.
                 # Fallback to preset distance threshold that works better.
                 # TODO: make it adjustable in the upgraded system.
@@ -153,7 +149,7 @@ def multiscale_icp(source,
                     TransformationEstimationForColoredICP(),
                     o3d.pipelines.registration.ICPConvergenceCriteria(relative_fitness=1e-6, relative_rmse=1e-6, max_iteration=iter))
 
-            if config["icp_method"] == "generalized":
+            if cfg["icp_method"] == "generalized":
                 result_icp = o3d.pipelines.registration.registration_generalized_icp(
                     source_down, target_down, distance_threshold,
                     current_transformation,
@@ -166,16 +162,16 @@ def multiscale_icp(source,
         if i == len(max_iter) - 1:
             information_matrix = o3d.pipelines.registration.get_information_matrix_from_point_clouds(source_down, target_down, voxel_size[scale] * 1.4, result_icp.transformation)
 
-    if config["debug_mode"]:
+    if cfg["debug_mode"]:
         # draw_registration_result_original_color(source, target, init_transformation)
         draw_registration_result_original_color(source, target, result_icp.transformation)
 
     return (result_icp.transformation, information_matrix)
 
 
-flip_transform = [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]
 
 def draw_registration_result(source, target, transformation):
+    flip_transform = [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]
     source_temp = copy.deepcopy(source)
     target_temp = copy.deepcopy(target)
     source_temp.paint_uniform_color([1, 0.706, 0])
@@ -187,6 +183,7 @@ def draw_registration_result(source, target, transformation):
     pass
 
 def draw_registration_result_original_color(source, target, transformation):
+    flip_transform = [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]
     source_temp = copy.deepcopy(source)
     target_temp = copy.deepcopy(target)
     source_temp.transform(transformation)
@@ -203,11 +200,11 @@ class matching_result:
         self.t = t
         self.success = False
         self.transformation = trans_init
-        self.infomation = np.identity(6)
+        self.information = np.identity(6)
         pass
 
 
-def make_posegraph_for_scene(ply_file_names, output_dir, config, trans_init=np.identity(4)):
+def make_posegraph_for_scene(ply_file_names, output_dir, cfg, trans_init=np.identity(4)):
 
     pose_graph = o3d.pipelines.registration.PoseGraph()
     # odometry = trans_init
@@ -220,12 +217,12 @@ def make_posegraph_for_scene(ply_file_names, output_dir, config, trans_init=np.i
         for t in range(s + 1, n_files):
             matching_results[s * n_files + t] = matching_result(s, t, trans_init)
 
-    if config["python_multi_threading"] is True:
+    if cfg["python_multi_threading"] is True:
         os.environ['OMP_NUM_THREADS'] = '1'
         max_workers = max(1, min(multiprocessing.cpu_count() - 1, len(matching_results)))
         mp_context = multiprocessing.get_context('spawn')
         with mp_context.Pool(processes=max_workers) as pool:
-            args = [(ply_file_names, v.s, v.t, config) for k, v in matching_results.items()]
+            args = [(ply_file_names, v.s, v.t, cfg) for k, v in matching_results.items()]
             results = pool.starmap(register_point_cloud_pair, args)
 
         for i, r in enumerate(matching_results):
@@ -236,7 +233,7 @@ def make_posegraph_for_scene(ply_file_names, output_dir, config, trans_init=np.i
     else:
         for r in matching_results:
             (matching_results[r].success, matching_results[r].transformation, matching_results[r].information) = \
-                register_point_cloud_pair(ply_file_names, matching_results[r].s, matching_results[r].t, config, trans_init)
+                register_point_cloud_pair(ply_file_names, matching_results[r].s, matching_results[r].t, cfg, trans_init)
 
     for r in matching_results:
         if matching_results[r].success:

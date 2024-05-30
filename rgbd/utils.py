@@ -94,7 +94,8 @@ def mesh_largest_connected_component(mesh, display=False, save_file_name=None):
     mesh.remove_unreferenced_vertices()
 
     if display:
-        o3d.visualization.draw_geometries([mesh], mesh_show_back_face=True)
+        draw_geometries_wrapper(mesh)
+
 
     # save filtered mesh
     if save_file_name is not None:
@@ -170,3 +171,55 @@ def make_clean_folder(path_folder):
         path_folder.mkdir(parents=True)
 
     pass
+
+def write_poses_to_log(filename, poses):
+
+    with open(filename, 'w') as f:
+        for i, pose in enumerate(poses):
+            f.write('{} {} {}\n'.format(i, i, i + 1))
+            f.write('{0:.8f} {1:.8f} {2:.8f} {3:.8f}\n'.format(
+                pose[0, 0], pose[0, 1], pose[0, 2], pose[0, 3]))
+            f.write('{0:.8f} {1:.8f} {2:.8f} {3:.8f}\n'.format(
+                pose[1, 0], pose[1, 1], pose[1, 2], pose[1, 3]))
+            f.write('{0:.8f} {1:.8f} {2:.8f} {3:.8f}\n'.format(
+                pose[2, 0], pose[2, 1], pose[2, 2], pose[2, 3]))
+            f.write('{0:.8f} {1:.8f} {2:.8f} {3:.8f}\n'.format(
+                pose[3, 0], pose[3, 1], pose[3, 2], pose[3, 3]))
+    pass
+
+def read_poses_from_log(traj_log):
+
+    trans_arr = []
+    with open(traj_log) as f:
+        content = f.readlines()
+
+        # Load .log file.
+        for i in range(0, len(content), 5):
+            # format %d (src) %d (tgt) %f (fitness)
+            data = list(map(float, content[i].strip().split(' ')))
+            ids = (int(data[0]), int(data[1]))
+            fitness = data[2]
+
+            # format %f x 16
+            T_gt = np.array(
+                list(map(float, (''.join(
+                    content[i + 1:i + 5])).strip().split()))).reshape((4, 4))
+
+            trans_arr.append(T_gt)
+
+    return trans_arr
+
+
+def draw_geometries_wrapper(geometry_list, window_name='open3d', flip=True):
+
+    if not isinstance(geometry_list, list):
+        geometry_list = [geometry_list]
+
+    if flip:  # better point of view
+        flip_transform = [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]
+        geometry_list = [copy.deepcopy(g).transform(flip_transform) for g in geometry_list]
+
+    o3d.visualization.draw_geometries(geometry_list, window_name=window_name, mesh_show_back_face=True)
+
+    pass
+
